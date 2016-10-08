@@ -579,7 +579,7 @@ VoicerGCView {
 		if(editorGUI.notNil) {
 			{
 				if(nameView.notClosed) {
-					editorGUI.value_(model.value);
+					editorGUI.spec_(model.spec).value_(model.value);
 					if(updateBus) { model.set(model.value, false) };
 				};
 				nil

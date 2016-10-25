@@ -14,7 +14,7 @@ NilTimeSpec {   // always schedules for now
 	asQuant { ^this }	// for compatibility with pattern playing
 	applyLatency { ^this }	// can't schedule earlier than now!
 		// override schedTime in subclasses for different scheduling results
-	nextTimeOnGrid { arg clock; 
+	nextTimeOnGrid { arg clock;
 		^clock.tryPerform(\beats) ? 0
 	}
 		// this is used in too many places, can't delete it outright yet
@@ -49,7 +49,7 @@ DelayTimeSpec : NilTimeSpec {
 		var beats = clock.tryPerform(\beats);
 		^beats + dStream.next(beats)
 	}
-	
+
 	storeArgs { ^[delay] }
 }
 
@@ -112,7 +112,7 @@ BasicTimeSpec : AbsoluteTimeSpecLeadTime {
 		offset = o;
 	}
 	applyLatency { |latency| ^this.copy.offset_(latency) }
-	
+
 		// breaking dependency on TempoClock nextTimeOnGrid
 		// because I don't like how it handles phase
 		// if it's fixed in TempoClock, I'll revert this change
@@ -123,7 +123,7 @@ BasicTimeSpec : AbsoluteTimeSpecLeadTime {
 		if(q < 0) { q = q.neg * schedclock.beatsPerBar };
 		time = roundUp(schedclock.beats - schedclock.baseBarBeat, q) + schedclock.baseBarBeat
 			+ p - (ostream.next(schedclock) ? 0);
-		if(wrap and: { time < schedclock.beats }) { time = time + quant };
+		if(wrap and: { time < schedclock.beats }) { time = time + q };
 		^time
 	}
 		// BP's leadTime overrides BasicTimeSpec's offset
@@ -134,7 +134,7 @@ BasicTimeSpec : AbsoluteTimeSpecLeadTime {
 		if(q < 0) { q = q.neg * schedclock.beatsPerBar };
 		time = roundUp(schedclock.beats - schedclock.baseBarBeat, q) + schedclock.baseBarBeat
 			+ p - (bp.leadTime ? 0);
-		if(wrap and: { time < schedclock.beats }) { time = time + quant };
+		if(wrap and: { time < schedclock.beats }) { time = time + q };
 		^time
 	}
 	storeArgs {

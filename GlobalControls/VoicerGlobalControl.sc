@@ -480,7 +480,7 @@ VoicerGCProxy {
 	// into the proxy and the display will update
 	// this is a private class -- do not call outside the context of gui-ing a voicer or proxy
 VoicerGCView {
-	var	<editor, <editorGUI, <nameView,	// internal
+	var	<editorGUI, <nameView,	// internal
 		<midiDrag,	// make midi routings draggable
 		<model,		// conn to other objects--model should be a VoicerGCProxy
 		<parentGui;
@@ -520,12 +520,10 @@ VoicerGCView {
 	}
 
 	remove { arg doRefresh = true, resizeNow = true;
-		// editor.removeDependant(model);
 		this.releaseFromDependencies;
 		doRefresh.if({  // doRefresh is true when removing a control, false when freeing whole gui
 			this.removeViews(resizeNow);
 		});
-		editor = nil;
 		editorGUI = nil;
 	}
 
@@ -592,8 +590,8 @@ VoicerGCView {
 			// if visible, update spec and value because
 			// the proxy might be pointing to something else now
 		{
-			if(editor.notNil and: { nameView.notClosed }) {
-				editor.spec_(model.spec).value_(model.value);
+			if(editorGUI.notNil and: { nameView.notClosed }) {
+				editorGUI.spec_(model.spec).value_(model.value);
 			};
 		}.defer;
 	}

@@ -63,6 +63,8 @@ SequenceNote : AbstractFunction {
 	<= { |that| ^that.numPerformBinaryOpOnNumber('<=', this.freq) }
 	>= { |that| ^that.numPerformBinaryOpOnNumber('>=', this.freq) }
 
+	isRest { ^freq.isRest }  // otherwise, SequenceNote(Rest(0), ...).isRest == false, wrong
+
 		// some freq calculations will require end result to be a number
 	asInteger { ^freq.asInteger }
 	asFloat { ^freq.asFloat }

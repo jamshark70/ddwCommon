@@ -15,11 +15,13 @@
 		^aNumber.perform(selector, this)
 	}
 }
-		
+
 + Object {
-	numPerformBinaryOpOnNumber { |selector|
-		Error("FATAL ERROR:\nBinary op " ++ selector.asCompileString
-			++ " on SequenceNote failed.").throw;
+	numPerformBinaryOpOnNumber { |selector, aNumber|
+		^aNumber.perform(selector, this)
+		// why the hell did I throw in this error?
+		// Error("FATAL ERROR:\nBinary op " ++ selector.asCompileString
+		// ++ " on SequenceNote failed.").throw;
 	}
 }
 
@@ -27,6 +29,11 @@
 
 + Array {
 	asSequenceNote { ^SequenceNote(*this) }
+}
+
+// for SequencNote(Rest(0), ...)
++ Rest {
+	asFloat { ^dur.asFloat }
 }
 
 

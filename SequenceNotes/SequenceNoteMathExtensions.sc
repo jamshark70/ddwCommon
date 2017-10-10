@@ -33,7 +33,7 @@
 
 // for SequencNote(Rest(0), ...)
 + Rest {
-	asFloat { ^dur.asFloat }
+	asFloat { ^this.value.asFloat }
 }
 
 

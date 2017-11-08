@@ -3,25 +3,25 @@ BufferQueryQueue {
 	// called by Buffer-readAndQuery to do the work
 	// if a file is being read and we're waiting for the b_info message from the server,
 	// the new file request goes into a queue to execute when the first is finished
-	
+
 	classvar	queue,
 			<isRunning = false,	// true if file(s) are being read
 			<>timeToFail = 3.0;
-	
+
 	*init {	// also reset
 		queue = Array.new;		// array elements will be args to Meta_Buffer-read2
 		isRunning = false;
 	}
-	
+
 	*clear { this.init }
-	
+
 	*add { arg ... args;	// all args from read2
 		queue.isNil.if({ this.init });
 		queue = queue.add(args);
 		isRunning.not.if({ this.doQueue });	// isRunning==true means another file is in process
 										// so don't interrupt
 	}
-	
+
 	*doQueue {	// reads file and gets info on the first queue item
 		var	server, path, startFrame, numFrames, completionFunc, buffer, timeout, resp,
 			updater;
@@ -39,10 +39,10 @@ BufferQueryQueue {
 			});
 			^this	// if server not booted, the next code block should be skipped
 		});
-		
+
 		isRunning = true;
 			// place OSCResponder -- note that flow of control happens here
-		resp = OSCpathResponder(server.addr, ['/b_info', buffer.bufnum], { arg t, r, m;
+		resp = OSCFunc({ arg m, t;
 			buffer.numFrames = m.at(2);
 			buffer.numChannels = m.at(3);
 			buffer.sampleRate = m.at(4);
@@ -58,8 +58,8 @@ BufferQueryQueue {
 			queue.removeAt(0);		// drop first item from queue
 			(queue.size > 0).if({
 				if(server.serverRunning) {
+					resp.free;  // OSCFunc allows multiple responders, must clear
 					this.doQueue	// still an item left? go back for that one
-							// no need to clear this responder b/c it will be overwritten
 				} {
 					updater = Updater(server, { |what|
 						if(what == \serverRunning and: { server.serverRunning }) {
@@ -71,7 +71,7 @@ BufferQueryQueue {
 			}, {
 				isRunning = false;		// so I can start again with the next .add call
 			});
-		}).add.removeWhenDone;
+		}, '/b_info', server.addr, argTemplate: [buffer.bufnum]).oneShot;
 		Post << "Loading " << path << "[" << (startFrame ? 0) << ", " << (numFrames ? "")
 			<< "]...";
 			// start the ball
@@ -84,11 +84,11 @@ BufferQueryQueue {
 			// in this case you don't want to post a failure
 			if(buffer.sampleRate.isNil and: { buffer.bufnum.notNil }) {
 				format("Buffer-readAndQuery for % failed. Continuing with next.", path).warn;
-				resp.remove;	// otherwise old responders remain and break later file loads
+				resp.free;	// otherwise old responders remain and break later file loads
 				queue.removeAt(0);
 				(queue.size > 0).if({
+					resp.free;
 					this.doQueue	// still an item left? go back for that one
-								// no need to clear this responder b/c it will be overwritten
 				}, {
 					isRunning = false;		// so I can start again with the next .add call
 				});

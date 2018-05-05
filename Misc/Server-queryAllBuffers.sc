@@ -4,14 +4,14 @@
 + Server {
 	queryAllBuffers { |timeout = 1.2, wait = 0.001, action|
 		var	returns = Array.newClear(this.options.numBuffers),
-			osc = OSCresponderNode(this.addr, '/b_info', { |t, r, m|
-				bInfoCount = bInfoCount + 1;
-				(m.size > 1 and: { m[2] > 0 }).if({
-					returns[m[1]] = Buffer.new(this, m[2], m[3], m[1])
-						.sampleRate_(m[4]);
-				});
-			}).add,
-			bInfoCount = 0;
+		osc = OSCFunc({ |m|
+			bInfoCount = bInfoCount + 1;
+			(m.size > 1 and: { m[2] > 0 }).if({
+				returns[m[1]] = Buffer.new(this, m[2], m[3], m[1])
+				.sampleRate_(m[4]);
+			});
+		}, '/b_info', this.addr),
+		bInfoCount = 0;
 		{	this.options.numBuffers.do({ |bufnum|
 				this.sendMsg(\b_query, bufnum);
 				wait.wait;
@@ -33,7 +33,7 @@
 						(bInfoCount / this.options.numBuffers * 100).round(0.01), $%)
 					.warn;
 			});
-			osc.remove;
+			osc.free;
 			nil;
 		});
 		^returns

@@ -78,7 +78,7 @@ AbsoluteTimeSpec : NilTimeSpec {
 				// invalid after given time has passed
 				// MethodError("AbsoluteTimeSpec(%) has expired at % beats."
 				// .format(q, schedclock.beats), this).throw;
-				nil
+			^nil
 		});
 	}
 	storeArgs { ^[quant] }

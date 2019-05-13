@@ -15,7 +15,7 @@
 		});
 		^indices
 	}
-	
+
 	collectIndicesOfItem { arg that;
 		var	indices;
 		indices = Array.new;
@@ -24,7 +24,7 @@
 		});
 		^indices
 	}
-	
+
 	collectIndices { |func|
 		var	indices = Array(this.size);
 		this.do({ |item, i|
@@ -32,7 +32,7 @@
 		});
 		^indices
 	}
-	
+
 	detectIndexFrom { |func, start = 0, step = 1|
 		var	index = start;
 		{	index.inclusivelyBetween(0, this.size-1)
@@ -42,7 +42,7 @@
 		};
 		index.inclusivelyBetween(0, this.size-1).if { ^index } { ^nil }
 	}
-	
+
 	detectFrom { |func, start = 0, step = 1|
 		var	index;
 		(index = this.detectIndexFrom(func, start, step)).notNil.if
@@ -52,15 +52,15 @@
 	oneOfTop { arg num;
 		^this.at(num.min(this.size).rand)
 	}
-	
-	mapMode { arg mode;
-		^this.collect({ |item| item.mapMode(mode) });
+
+	mapMode { arg mode, scAccidentals = false;
+		^this.collect({ |item| item.mapMode(mode, scAccidentals) });
 	}
-	
-	unmapMode { arg mode;
-		^this.collect({ |item| item.unmapMode(mode) });
+
+	unmapMode { arg mode, scAccidentals = false;
+		^this.collect({ |item| item.unmapMode(mode, scAccidentals) });
 	}
-	
+
 		// change an array of notes into a SequenceNote with an array of frequencies etc.
 	asChord {
 		var	freqs, lengths, args;
@@ -74,7 +74,7 @@
 		});
 		^SequenceNote(freqs, this[0].dur, lengths, args)
 	}
-	
+
 	avgsmooth { |avgpts = 5|
 		var	runsum = this[..avgpts-1].sum,
 			out = this.class.new(this.size - avgpts + 1);
@@ -84,34 +84,34 @@
 			this[i+avgpts].notNil.if({ runsum = runsum + this[i+avgpts]; });
 		});
 		^out
-	}		
+	}
 }
 
 + SimpleNumber {
-	mapMode { arg mode;
+	mapMode { arg mode, scAccidentals = false;
 		^mode.prMap(this)	// save a dispatch by going right to the pseudo-private method
 	}
-	
-	unmapMode { arg mode;
+
+	unmapMode { arg mode, scAccidentals = false;
 		^mode.prUnmap(this)
 	}
 }
 
 + Pattern {
-	mapMode { |mode|
+	mapMode { |mode, scAccidentals = false|
 		^Pcollect({ |item| item.mapMode(mode) }, this)
 	}
-	unmapMode { |mode|
+	unmapMode { |mode, scAccidentals = false|
 		^Pcollect({ |item| item.unmapMode(mode) }, this)
 	}
 }
 
 + Stream {
-	mapMode { |mode|
-		^this.collect { |item| item.mapMode(mode) }
+	mapMode { |mode, scAccidentals = false|
+		^this.collect { |item| item.mapMode(mode, scAccidentals) }
 	}
-	unmapMode { |mode|
-		^this.collect { |item| item.unmapMode(mode) }
+	unmapMode { |mode, scAccidentals = false|
+		^this.collect { |item| item.unmapMode(mode, scAccidentals) }
 	}
 }
 
@@ -131,7 +131,7 @@
 			result.includes(item).not.if({ result.add(item) });
 		});
 		^result
-	}	
+	}
 }
 
 
@@ -191,11 +191,11 @@
 	hexToInt {
 		^this.collect({ arg x; x.hexToInt })
 	}
-	
+
 	asHexString {
 		^this.collect({ arg x; x.asInteger.asHexString })
 	}
-		
+
 }
 
 + Integer {
@@ -321,7 +321,7 @@
 
 + Env {
 	*zero { |time = 1| ^Env.new([0, 0], [time]) }
-	
+
 	*one { |time = 1| ^Env.new([1, 1], [time]) }
 }
 

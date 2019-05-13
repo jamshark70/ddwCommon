@@ -14,18 +14,18 @@ ModalSpec {
 		<>octaveOffset = 0;
 
 	var	<degToKey, <keyToDeg;	// conversion dictionaries
-	
+
 	*new { arg scale, stepsPerOctave, root, tuning, cpsFunc;
 		^super.newCopyArgs((scale ? #[0, 2, 4, 5, 7, 9, 11]), stepsPerOctave ? 12, root,
 			tuning ? 0, cpsFunc).init;
 	}
-	
+
 	*newFromKeys { arg keys, stepsPerOctave, tuning, cpsFunc;
 		^this.new(keys - keys.first, stepsPerOctave, keys.first, tuning, cpsFunc)
 	}
 
 	storeArgs { ^[scale, stepsPerOctave, root, tuning] }
-	
+
 	init {	// build conversion tables for speed
 			// keys are assumed to be int - DO NOT USE FRACTIONAL KEYS
 			// for qtr tones, set stepsPerOctave = 24 and use your own frequency conversion
@@ -52,45 +52,53 @@ ModalSpec {
 		keyToDeg.keysValuesDo({ |k, v|
 			degToKey.put(v, k);	// reverse lookup
 		});
-		
+
 			// cpsFunc_ provides a default
 		this.cpsFunc = cpsFunc;
 	}
 
 		// note: using object.mapMode(mode) directly is slightly faster
-	map { arg key;
-		^key.mapMode(this)
+	map { arg key, scAccidentals = false;
+		^key.mapMode(this, scAccidentals)
 	}
-	
-	unmap { arg degree;
-		^degree.unmapMode(this)
+
+	unmap { arg degree, scAccidentals = false;
+		^degree.unmapMode(this, scAccidentals)
 	}
 
 		// map key to degree (i.e., map chromatic value INTO the mode)
 		// should work b/c keys were assigned as integers in .init
-	prMap { arg key;
-		^keyToDeg[(key-root) % stepsPerOctave]
-				?? { keyToDeg[(key-root).asInteger % stepsPerOctave] }
-			+ ((((key-root) / stepsPerOctave).trunc - octaveOffset) * scale.size);
+	prMap { arg key, scAccidentals = false;
+		^(if(scAccidentals) {
+			key.keyToDegree(scale, stepsPerOctave)
+		} {
+			keyToDeg[(key-root) % stepsPerOctave]
+			?? { keyToDeg[(key-root).asInteger % stepsPerOctave] }
+		})
+		+ ((((key-root) / stepsPerOctave).trunc - octaveOffset) * scale.size);
 	}
-	
+
 		// map degree to key - 0 = root, 0.5 = root + halfway between steps 0 & 1
 		// unmap the modal value OUT OF the mode
 		// the null check here may yield incorrect results if a step is > 2 semitones
-	prUnmap { arg degree;	// this method must ONLY receive a simplenumber
+	prUnmap { arg degree, scAccidentals = false;	// this method must ONLY receive a simplenumber
 		var	num;
+		^(if(scAccidentals) {
+			degree.degreeToKey(scale, stepsPerOctave).debug("used degreeToKey")
+		} {
 			// if close enough to an integer
 			// some of my algo-comp stuff produces degrees like 28.000000000000014 ???
 			// no time to fix it there, so I'll just improve the condition here
-		^(((num = degree % 1).inclusivelyBetween(-1e-5, 1e-5)).if({
-			degToKey[degree.asInteger % scale.size]
-		}, {
-			degToKey[degree.asInteger % scale.size] + (num * num.fuzzygcd(1).reciprocal)
-		}))
-			+ (((degree / scale.size).trunc + octaveOffset) * stepsPerOctave)
-			+ root // + tuning;
+			(((num = degree % 1).inclusivelyBetween(-1e-5, 1e-5)).if({
+				degToKey[degree.asInteger % scale.size]
+			}, {
+				degToKey[degree.asInteger % scale.size] + (num * num.fuzzygcd(1).reciprocal)
+			}))
+		})
+		+ (((degree / scale.size).trunc + octaveOffset) * stepsPerOctave)
+		+ root // + tuning;
 	}
-	
+
 	addSteps { arg degree, steps;	// add steps semitones to degree
 		var newkey;
 			// convert to a 1-octave key representation and add steps
@@ -103,11 +111,11 @@ ModalSpec {
 			+ degree.trunc(scale.size)
 			+ (newkey / stepsPerOctave).trunc;	// adjustment if newkey wrapped around
 	}
-	
+
 	includes { arg key;	// does this midinote belong to the scale?
 		^scale.includesEqual((key - root) % stepsPerOctave)
 	}
-	
+
 	== { |that|
 		(that === this).if({ ^true });	// easy case, skip the loop
 		this.instVarSize.do({ |index|
@@ -115,18 +123,18 @@ ModalSpec {
 		});
 		^true
 	}
-	
+
 	asMode { ^this }
-	
+
 		// convert modal note index to raw Hz using the assigned cpsFunc
 	cps { |degree|
 		^cpsFunc.value(degree.unmapMode(this))
 	}
-	
+
 	cpsFunc_ { |func|
 		cpsFunc = func ? { |midi| (midi + tuning).midicps };
 	}
-	
+
 		// transpose the scale so that the root is different but the modal notes are the same
 		// returns a new object
 	transposeRoot { |newRoot = 0|

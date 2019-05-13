@@ -89,20 +89,20 @@
 
 + SimpleNumber {
 	mapMode { arg mode, scAccidentals = false;
-		^mode.prMap(this)	// save a dispatch by going right to the pseudo-private method
+		^mode.prMap(this, scAccidentals)	// save a dispatch by going right to the pseudo-private method
 	}
 
 	unmapMode { arg mode, scAccidentals = false;
-		^mode.prUnmap(this)
+		^mode.prUnmap(this, scAccidentals)
 	}
 }
 
 + Pattern {
 	mapMode { |mode, scAccidentals = false|
-		^Pcollect({ |item| item.mapMode(mode) }, this)
+		^Pcollect({ |item| item.mapMode(mode, scAccidentals) }, this)
 	}
 	unmapMode { |mode, scAccidentals = false|
-		^Pcollect({ |item| item.unmapMode(mode) }, this)
+		^Pcollect({ |item| item.unmapMode(mode, scAccidentals) }, this)
 	}
 }
 

@@ -74,8 +74,8 @@ ModalSpec {
 		} {
 			keyToDeg[(key-root) % stepsPerOctave]
 			?? { keyToDeg[(key-root).asInteger % stepsPerOctave] }
+			+ ((((key-root) / stepsPerOctave).trunc - octaveOffset) * scale.size);
 		})
-		+ ((((key-root) / stepsPerOctave).trunc - octaveOffset) * scale.size);
 	}
 
 		// map degree to key - 0 = root, 0.5 = root + halfway between steps 0 & 1
@@ -84,7 +84,7 @@ ModalSpec {
 	prUnmap { arg degree, scAccidentals = false;	// this method must ONLY receive a simplenumber
 		var	num;
 		^(if(scAccidentals) {
-			degree.degreeToKey(scale, stepsPerOctave).debug("used degreeToKey")
+			degree.degreeToKey(scale, stepsPerOctave)
 		} {
 			// if close enough to an integer
 			// some of my algo-comp stuff produces degrees like 28.000000000000014 ???
@@ -94,8 +94,8 @@ ModalSpec {
 			}, {
 				degToKey[degree.asInteger % scale.size] + (num * num.fuzzygcd(1).reciprocal)
 			}))
+			+ (((degree / scale.size).trunc + octaveOffset) * stepsPerOctave)
 		})
-		+ (((degree / scale.size).trunc + octaveOffset) * stepsPerOctave)
 		+ root // + tuning;
 	}
 
@@ -127,8 +127,8 @@ ModalSpec {
 	asMode { ^this }
 
 		// convert modal note index to raw Hz using the assigned cpsFunc
-	cps { |degree|
-		^cpsFunc.value(degree.unmapMode(this))
+	cps { |degree, scAccidentals = false|
+		^cpsFunc.value(degree.unmapMode(this, scAccidentals))
 	}
 
 	cpsFunc_ { |func|

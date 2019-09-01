@@ -55,6 +55,7 @@ GlobalControlBase : AbstractFunction {
 			// because of dependencies, .set may be called multiple times with the same value
 		(value != val).if({
 			this.stopAuto;
+			if(resync) { this.stopWatching };
 			value = val;
 			bus.server.sendBundle(latency, this.setMsg(value));
 			this.changed((what: \value, updateGUI: updateGUI, resync: resync, updateBus: false));

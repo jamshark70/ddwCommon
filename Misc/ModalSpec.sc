@@ -130,6 +130,7 @@ ModalSpec {
 	cps { |degree, scAccidentals = false|
 		^cpsFunc.value(degree.unmapMode(this, scAccidentals))
 	}
+	cpsOfKey { |key| ^cpsFunc.value(key) }
 
 	cpsFunc_ { |func|
 		cpsFunc = func ? { |midi| (midi + tuning).midicps };

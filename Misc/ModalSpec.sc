@@ -69,8 +69,17 @@ ModalSpec {
 		// map key to degree (i.e., map chromatic value INTO the mode)
 		// should work b/c keys were assigned as integers in .init
 	prMap { arg key, scAccidentals = false;
+		var octave, absKey, degree;
 		^(if(scAccidentals) {
-			key.keyToDegree(scale, stepsPerOctave)
+			key = key - root;
+			octave = key div: stepsPerOctave;
+			absKey = key % stepsPerOctave;
+			// currently biases sharps. may use a mapping table later
+			degree = ((scale.detectIndex { |x| absKey < x }) ?? { scale.size }) - 1;
+			// degree index + octave offset + remaining semitones as 0.1
+			degree + (octave * scale.size) + (0.1 * (absKey - scale[degree]))
+			// BUG: uses indexInBetween so # -> 0.5, not 0.1
+			// (key - root).keyToDegree(scale, stepsPerOctave)
 		} {
 			keyToDeg[(key-root) % stepsPerOctave]
 			?? { keyToDeg[(key-root).asInteger % stepsPerOctave] }

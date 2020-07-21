@@ -1,0 +1,41 @@
+TITLE:: GlobalControlMIDIOut
+summary:: Forward GlobalControl values to MIDI CCs
+categories:: ddwCommon
+related:: Classes/GenericGlobalControl
+
+DESCRIPTION::
+GlobalControlMIDIOut "hangs" off of a GenericGlobalControl, VoicerGlobalControl or MixerControl, forwarding value changes to a MIDIOut, channel number and continuous controller number.
+
+Values will be unmapped according to the global control's code::spec:: (that is, normalized to 0.0-1.0), and then mapped onto MIDI's 0-127 range. If the global control is visible in a GUI, the MIDI output value will correspond to the displayed slider position.
+
+Note that this applies to all value changes, including those coming from automation that is being watched.
+
+
+CLASSMETHODS::
+
+METHOD:: new
+Creates an instance, and attaches it as a dependent to the given model.
+
+A shortcut is to call code::.connectMIDIOut(midiout, midichannel, ccnum):: on the global control object: for instance, code::aVoicer.mapGlobal(\name, nil, value, spec).connectMIDIOut(midiout, midichannel, ccnum)::.
+
+ARGUMENT:: model
+The global control instance whose values should be followed.
+
+ARGUMENT:: midiout
+A link::Classes/MIDIOut:: object.
+
+ARGUMENT:: midichannel
+An integer, 0-15, for the MIDI channel number.
+
+ARGUMENT:: ccnum
+An integer, 0-127, for the controller number.
+
+returns:: The instance.
+
+
+INSTANCEMETHODS::
+
+METHOD:: free
+Disconnect from MIDI and stop transmitting. This is called automatically if the 'model' global control is freed (i.e., automatic garbage collection).
+
+private:: update, init

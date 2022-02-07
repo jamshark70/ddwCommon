@@ -1,17 +1,17 @@
 
 TempoClick {
 	// takes a tempoclock, plays impulses on a kr bus based on the clock
-	
+
 	classvar	<>latencyFudge = 0;
-	
+
 	var	<server, <clock, <bus, <subdiv, <nodeID, nodeIDBounce;
 	var	aliveThread, serverWatcher;
-	
+
 	*new { arg server, clock, bus, subdiv = 1;
 		^super.newCopyArgs(server ?? { Server.default }, clock ? TempoClock.default,
 			bus, subdiv).init;
 	}
-	
+
 	init {
 		var	id2;
 		clock.isKindOf(TempoClock).not.if({
@@ -34,14 +34,14 @@ TempoClick {
 		nodeIDBounce = nodeID + id2;
 		this.play;
 	}
-	
+
 	play {
 		server.waitForBoot({	// when server is booted
 			bus.isNil.if({ bus = Bus.control(server, 1) });
 			this.startAliveThread;
 		});
 	}
-	
+
 	startAliveThread {
 		var	time;
 			// synthdef sending is asynchronous
@@ -53,7 +53,7 @@ TempoClick {
 			Line.kr(0, 1, tempo.reciprocal, doneAction:2);
 			Out.kr(bus, Impulse.kr(tempo * subd));
 		}).send(server);
-		
+
 		aliveThread = Routine({
 			{	nodeID = nodeIDBounce - nodeID;
 				server.sendBundle(server.latency, [\s_new, \TempoClick, nodeID,
@@ -64,13 +64,13 @@ TempoClick {
 		});
 		clock.schedAbs(clock.elapsedBeats.roundUp, aliveThread);
 	}
-	
+
 	stop {
 		aliveThread.stop; aliveThread = nil;
 	}
-	
+
 	remove { this.free }
-	
+
 	free {
 		this.stop;
 		bus.free;
@@ -82,28 +82,28 @@ TempoClick {
 			nodeID = nil
 		};
 	}
-	
+
 	update { |obj, what|
 		switch(what)
 			{ \tempo } {
 				aliveThread.notNil.if({
-					server.sendMsg(\n_set, nodeID, \tempo, clock.tempo)
+					server.sendBundle(server.latency, [\n_set, nodeID, \tempo, clock.tempo])
 				});
 			}
 			{ \stop } { this.free };
 	}
-	
+
 	tempo_ { arg tempo;
 		clock.tempo = tempo;	// TempoClock calls changed, which calls update
 	}
-	
+
 	subdiv_ { arg s;
 		subdiv = s;
 		aliveThread.notNil.if({ server.sendMsg(\n_set, nodeID, \subd, subdiv) });
 	}
-	
+
 	index { ^bus.index }
-	asMapArg { ^"c" ++ bus.index }	
+	asMapArg { ^"c" ++ bus.index }
 	asMap { ^this.asMapArg }
 	asUGenInput { ^In.kr(bus, 1) }
 	asControlInput { ^this.asMapArg }

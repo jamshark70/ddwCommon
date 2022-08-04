@@ -1,16 +1,17 @@
 
 GlobalControlMIDIOut {
-	var model, midiout, midichannel, ccnum;
+	var model, ctlmsg;
 	var <>low = 0, <>high = 127;
 
-	*new { |model, midiout, midichannel, ccnum|
-		^super.newCopyArgs(model, midiout, midichannel, ccnum).init;
+	*new { |model, midisender, midichannel, ccnum|
+		^super.newCopyArgs(model).init(midisender, midichannel, ccnum);
 	}
 
-	init {
-		if(midiout.isNil) { Error("GlobalControlMIDIOut: MIDIOut is empty").throw };
+	init { |midisender, midichannel, ccnum|
+		if(midisender.isNil) { Error("GlobalControlMIDIOut: MIDISender is empty").throw };
 		if(midichannel.isNil) { midichannel = 0 };
 		if(ccnum.isNil) { ccnum = 1 };
+		ctlmsg = MIDIControlMessage(ccnum, channel: midichannel, device: midisender, latency: 0);
 		model.addDependant(this);
 		this.sendMIDI;
 	}
@@ -29,7 +30,7 @@ GlobalControlMIDIOut {
 	}
 
 	sendMIDI {
-		midiout.control(midichannel, ccnum, this.midiValue);
+		ctlmsg.play(nil, this.midiValue);
 	}
 
 	update { |obj, what|
@@ -45,7 +46,7 @@ GlobalControlMIDIOut {
 }
 
 + GlobalControlBase {
-	connectMIDIOut { |midiout, midichannel, ccnum|
-		^GlobalControlMIDIOut(this, midiout, midichannel, ccnum);
+	connectMIDIOut { |midisender, midichannel, ccnum|
+		^GlobalControlMIDIOut(this, midisender, midichannel, ccnum);
 	}
 }

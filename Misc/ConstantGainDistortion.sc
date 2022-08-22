@@ -1,18 +1,21 @@
 // hjh 2022 - gplv3
 
 ConstantGainDistortion {
-	*ar { |sig, preamp = 1, distFunc(_.tanh), attack = 0.02, decay = 0.25|
-		var distorted = distFunc.value(sig * preamp);
-		var ampBefore = Amplitude.ar(sig, attack, decay);
-		var ampAfter = Amplitude.ar(distorted, attack, decay);
+	*ar { |in, preamp = 1, distFunc(_.tanh), rmsSize = 512|
+		var distorted = distFunc.value(in * preamp);
+
+		var ampBefore = (RunningSum.ar(in.squared, rmsSize) / rmsSize).sqrt;
+		var ampAfter = (RunningSum.ar(distorted.squared, rmsSize) / rmsSize).sqrt;
 
 		^distorted * min(10, (ampBefore / max(0.01, ampAfter)))
 	}
 
-	*kr { |sig, preamp = 1, distFunc(_.tanh), attack = 0.02, decay = 0.25|
-		var distorted = distFunc.value(sig * preamp);
-		var ampBefore = Amplitude.kr(sig, attack, decay);
-		var ampAfter = Amplitude.kr(distorted, attack, decay);
+	*kr { |in, preamp = 1, distFunc(_.tanh), rmsSize = 512|
+		var distorted = distFunc.value(in * preamp);
+		var size = rmsSize / BlockSize.ir;
+
+		var ampBefore = (RunningSum.kr(in.squared, size) / size).sqrt;
+		var ampAfter = (RunningSum.kr(distorted.squared, size) / size).sqrt;
 
 		^distorted * min(10, (ampBefore / max(0.01, ampAfter)))
 	}

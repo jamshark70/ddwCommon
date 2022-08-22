@@ -1,0 +1,94 @@
+TITLE:: ConstantGainDistortion
+summary:: Applies a distortion function with volume compensation
+categories:: UGens>Distortion
+
+
+DESCRIPTION::
+ConstantGainDistortion applies a distortion function of your choosing, and adjusts the output gain to match the input signal (by RMS).
+
+Rationale: Distortion effects are usually volume-dependent, resulting in a wide output dynamic range. This complicates mixing in a live situation; as you increase the distortion preamp, you may need to reduce channel volume simultaneously. By matching output volume to the input, you get the spectral effect of the distortion without a large increase in volume.
+
+It is not recommended to modulate code::preamp:: very rapidly (because the RMS calculations need a little time to catch up). Slow modulation is fine.
+
+The RMS quotient may introduce a small amount of amplitude modulation. Large rmsSize values will reduce the amount of amplitude modulation, but may affect envelope transients. Small rmsSize values may exhibit greater amplitude modulation.
+
+
+CLASSMETHODS::
+
+METHOD:: ar
+Add the distortion UGens, at audio rate.
+
+ARGUMENT:: in
+Input signal.
+
+ARGUMENT:: preamp
+Pre-distortion gain factor, as a simple multiplier (1.0 = 0 dB; 2.0 ~= +6 dB).
+
+ARGUMENT:: distFunc
+A function, whose argument will receive code::in * preamp::, and whose output should be the desired distortion effect. The default is code::_.tanh:: (see link::Reference/Partial-Application:: for details on the underscore syntax).
+
+ARGUMENT:: rmsSize
+The number of samples for RMS calculation.
+
+
+METHOD:: kr
+Same functionality, just at control rate.
+
+
+EXAMPLES::
+
+The example shows you the measured volume of two signals: 1/ simple distortion = code::(sig * preamp).tanh::, and 2/ ConstantGainDistortion. Without volume compensation, the dynamic range is over 20 dB (for preamp ranging -20 dB to +40 dB). With volume compensation, the dynamic range is about half a dB. (The output audio signal is the volume-compensated distortion.)
+
+code::
+(
+var resp, sliders, numbers, window;
+
+s.waitForBoot {
+	a = {
+		var sig = SinOsc.ar(110);
+		var preamp = MouseX.kr(-20, 40).dbamp;
+
+		// "normal" distortion
+		var d1 = (sig * preamp).tanh;
+
+		// gain-adjusted
+		var d2 = ConstantGainDistortion.ar(sig, preamp);  // tanh default
+
+		var rms = (RunningSum.ar([d1, d2].squared, 512) / 512).sqrt;
+		SendReply.ar(Impulse.ar(10), '/distHelpRms', rms);
+
+		(d2 * 0.1).dup
+	}.play;
+
+	window = Window("rms", Rect(800, 200, 400, 150)).front;
+	sliders = Array.fill(2, {
+		Slider().orientation_(\horizontal)
+	});
+	numbers = Array.fill(2, {
+		NumberBox().fixedWidth_(60)
+	});
+	window.layout = VLayout(
+		*Array.fill(2, { |i|
+			HLayout(
+				StaticText().fixedWidth_(120)
+				.string_(#["Raw distortion", "Volume adjusted"][i]),
+				numbers[i],
+				sliders[i]
+			)
+		})
+	);
+
+	resp = OSCFunc({ |msg|
+		defer {
+			msg[3..].do { |value, i|
+				sliders[i].value = value;
+				numbers[i].value = value.ampdb.round(0.01);
+			}
+		}
+	}, '/distHelpRms', s.addr);
+
+	window.onClose = { window.onClose = nil; resp.free; a.free };
+	a.onFree { defer { a = nil; window.close } };
+};
+)
+::

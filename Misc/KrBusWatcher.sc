@@ -11,14 +11,14 @@
 
 KrBusWatcher : NodeWatcher {
 	classvar	<>allBusWatchers;
-	
-	var	<aliveThread, <>updateFreq = 2;
+
+	var	<aliveThread, <>updateFreq = 8;
 
 	*initClass {
 		allBusWatchers = IdentityDictionary.new;
 		CmdPeriod.add(this);
 	}
-	
+
 	*cmdPeriod { allBusWatchers.do(_.clear) }
 
 	*newFrom { arg server;
@@ -27,16 +27,16 @@ KrBusWatcher : NodeWatcher {
 		if(res.isNil, {
 			res = this.new(server).server_(server);  // better OOP style anyway
 			res.start;
-			allBusWatchers.put(server.name, res) 
+			allBusWatchers.put(server.name, res)
 		});
 		^res
 	}
-	
+
 	clear {
 		nodes = IdentityDictionary.new;
 		this.stopAliveThread;
 	}
-	
+
 	register { |bus|
 		if(server.serverRunning.not, { nodes.removeAll; ^this });
 		if(isWatching, {
@@ -57,7 +57,7 @@ KrBusWatcher : NodeWatcher {
 		watcher = this.newFrom(bus.asBus.server);
 		watcher.register(bus);
 	}
-	
+
 	*unregister { |bus|
 		var watcher;
 		watcher = this.newFrom(bus.asBus.server);
@@ -65,11 +65,11 @@ KrBusWatcher : NodeWatcher {
 	}
 
 	cmds { ^#["/c_setn"] }
-	
+
 	respond { arg method, msg;
 		this.perform(method, msg)
 	}
-	
+
 	startAliveThread {
 		aliveThread = aliveThread ?? {
 			Routine({
@@ -88,7 +88,7 @@ KrBusWatcher : NodeWatcher {
 			// do not re-start aliveThread if it's running already
 		aliveThread.nextBeat.isNil.if({ aliveThread.play(SystemClock) });
 	}
-	
+
 	stopAliveThread {
 		aliveThread.stop;
 		aliveThread = nil;

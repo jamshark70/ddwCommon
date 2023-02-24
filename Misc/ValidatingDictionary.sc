@@ -6,10 +6,7 @@ ValidatingDictionary {
 		^super.newCopyArgs(dict, validator, putFallback)
 	}
 
-	// core methods for speed
-
-	at { |key| ^dict.at(key) }
-
+	// raison d'etre
 	put { |key, value|
 		if(validator.(value, key, dict) ?? { true }) {
 			dict.put(key, value);
@@ -23,6 +20,10 @@ ValidatingDictionary {
 		this.put(key, value);
 		^prev
 	}
+
+	// core methods for speed
+	size { ^dict.size }
+	at { |key| ^dict.at(key) }
 
 	keys { ^dict.keys }
 	values { ^dict.values }

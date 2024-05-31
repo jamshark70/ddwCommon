@@ -347,7 +347,7 @@ VoicerGlobalControl : GenericGlobalControl {
 	free { |updateGUI = true|
 			  // remove kr bus mapping from each active synth
 		voicer.nodes.do({ arg n;
-			(n.isPlaying).if({ n.synth.map(name, -1); });
+			(n.isPlaying).if({ n.synth.set(name, value); });
 		});
 		super.free(updateGUI);
 	}

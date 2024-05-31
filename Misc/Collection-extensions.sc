@@ -2,6 +2,19 @@
 // miscellaneous Collection enhancements
 
 + SequenceableCollection {
+	// collectIfNotNil
+	// basically collect and select in one loop
+	collectIfNotNil { |func|
+		var result = this.species.new(this.size);
+		this.do { |item, i|
+			var mapped = func.value(item, i);
+			if(mapped.notNil) {
+				result.add(mapped);
+			};
+		};
+		^result
+	}
+
 		// find indices for every item found in another array
 		// nils are ignored
 	collectIndicesFromArray { arg sourceArray;

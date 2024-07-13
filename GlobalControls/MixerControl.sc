@@ -9,7 +9,7 @@ MixerControl : GlobalControlBase {
 	}
 
 	update { |bus, msg|
-		value = msg[0];
+		super.update(bus, msg);
 		(mixerGui.notNil).if({
 			mixerGui.updateView(controlKey, value)
 		});

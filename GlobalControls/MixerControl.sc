@@ -3,6 +3,19 @@ MixerControl : GlobalControlBase {
 	var <mixerGui, controlKey;
 	var regCount = 0;
 
+	set { arg val, updateGUI = true, latency, resync = true;
+		if(nrt) {
+			// minor hack:
+			// I can't assume all global controls are going through MixerChannel
+			// but MixerControl definitely does
+			MixerChannelReconstructor.queueBundle(
+				server,
+				[this.setMsg(val)]
+			);
+		} {
+			^super.set(val, updateGUI, latency, resync)
+		}
+	}
 	mixerGui_ { |mcgui|
 		mixerGui = mcgui;
 		NotificationCenter.notify(this, \setMixerGui, [mcgui]);

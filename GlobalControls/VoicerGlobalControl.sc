@@ -29,6 +29,7 @@ GlobalControlBase : AbstractFunction {
 		<>lag,
 		<autoSynth,
 		watchCount = 0;    // more than one object might request that I watch for server changes
+	var nrt = false;
 
 	*new { arg name, bus, value, spec, allowGUI = true ... extraArgs;
 		^super.new.init(name, bus, value, spec, allowGUI, *extraArgs);
@@ -36,7 +37,8 @@ GlobalControlBase : AbstractFunction {
 
 	init { arg n, b, val, sp, guiOK;
 		server = b.tryPerform(\server) ? Server.default;
-		if(server.serverRunning.not) {
+		nrt = server.tryPerform(\nrt) ?? { false };
+		if(server.serverRunning.not and: { nrt.not }) {
 			MethodError("Server % must be running before using global controls."
 				.format(server), this).throw;
 		};
@@ -63,7 +65,7 @@ GlobalControlBase : AbstractFunction {
 	}
 
 	setMsg { |val|
-		^[\c_set, bus.index, value]
+		^[\c_set, bus.index, val]
 	}
 
 	value_ { arg value;

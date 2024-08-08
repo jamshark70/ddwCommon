@@ -4,7 +4,7 @@ MixerControl : GlobalControlBase {
 	var regCount = 0;
 
 	set { arg val, updateGUI = true, latency, resync = true;
-		if(nrt) {
+		if(nrt and: { MixerChannelReconstructor.bundling }) {
 			// minor hack:
 			// I can't assume all global controls are going through MixerChannel
 			// but MixerControl definitely does
